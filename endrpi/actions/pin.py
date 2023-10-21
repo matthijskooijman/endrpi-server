@@ -12,14 +12,20 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from typing import Dict, List
+import asyncio
+from typing import Dict, Iterator, List, NamedTuple
 
 from gpiozero import Device, PinUnsupported
 from pydantic import ValidationError
 
 from endrpi.model.action_result import ActionResult, error_action_result, success_action_result
 from endrpi.model.message import MessageData, PinMessage
-from endrpi.model.pin import PinConfiguration, RaspberryPiPinIds, PinIo, PinPull, PinConfigurationMap
+from endrpi.model.pin import PinConfiguration, PinEdges, RaspberryPiPinIds, PinIo, PinPull, PinConfigurationMap
+
+
+class PinEvent(NamedTuple):
+    ticks: int
+    state: int
 
 
 def read_pin_configurations(pin_ids: List[RaspberryPiPinIds]) -> ActionResult[PinConfigurationMap]:
@@ -95,3 +101,37 @@ def update_pin_configuration(pin_id: RaspberryPiPinIds,
 
     message_data = MessageData(message=PinMessage.SUCCESS_UPDATED__PIN_ID__.format(pin_id=pin_id))
     return success_action_result(message_data)
+
+
+async def watch_pin(pin_id: RaspberryPiPinIds, edges: PinEdges) -> Iterator[PinEvent]:
+    """
+    Configures a pin for input with the given pull. Monitors its state and returns all changes.
+    """
+
+    # try:
+    gpiozero_pin = Device.pin_factories[pin_id.chipnum].pin(pin_id.linenum)
+    # TODO: How to return an error? Raise?
+    # except PinUnsupported:
+    #    return error_action_result(PinMessage.ERROR_UNSUPPORTED__PIN_ID__.format(pin_id=pin_id))
+
+    loop = asyncio.get_running_loop()
+    queue = asyncio.Queue()
+
+    # This is called from the lgpio thread on pin events. Use
+    # call_soon_threadsafe to something to run in the asyncio loop, and then
+    # use create_task to ensure that the async queue.put is actually awaited
+    # (if the queue is full it can block).
+    def when_changed(ticks, state):
+        loop.call_soon_threadsafe(lambda: loop.create_task(queue.put(PinEvent(ticks, state))))
+
+    # TODO: There is probably a race condition here. Low-level gpiod (i.e.
+    # kernel) seems to synthesise an event atomically when starting to monitor
+    # a pin, but it seems lgpio gpiozero supresses that event maybe?
+    yield PinEvent(ticks=0, state=gpiozero_pin.state)
+
+    gpiozero_pin.edges = edges.lower()
+    gpiozero_pin.when_changed = when_changed
+
+    # TODO: Handle termination of server
+    while True:
+        yield await queue.get()

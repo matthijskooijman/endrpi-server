@@ -70,5 +70,10 @@ class PinConfiguration(BaseModel):
     state: Optional[float]
     pull: Optional[PinPull]
 
+class PinEdges(str, Enum):
+    """Enumerations for edges that can be watched on a GPIO pin."""
+    BOTH = 'BOTH'
+    RISING = 'RISING'
+    FALLING = 'FALLING'
 
 PinConfigurationMap = Dict[RaspberryPiPinIds, PinConfiguration]

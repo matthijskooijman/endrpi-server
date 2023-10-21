@@ -15,11 +15,13 @@
 from typing import Dict, Union
 
 from fastapi import APIRouter, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.websockets import WebSocket
 
-from endrpi.actions.pin import read_pin_configurations, read_pin_configuration, update_pin_configuration
+from endrpi.actions.pin import read_pin_configurations, read_pin_configuration, update_pin_configuration, watch_pin
 from endrpi.model.action_result import ActionResult, error_action_result
 from endrpi.model.message import MessageData, PinMessage
-from endrpi.model.pin import PinConfiguration, RaspberryPiPinIds, PinIo
+from endrpi.model.pin import PinConfiguration, PinEdges, RaspberryPiPinIds, PinIo
 from endrpi.utils.api import http_response
 
 # Router that is exported to the server
@@ -107,3 +109,24 @@ async def put_pin_state_param_route(bcm_id: str, pin_configuration: PinConfigura
     else:
         action_result = error_action_result(PinMessage.ERROR_NOT_FOUND__PIN_ID__.format(pin_id=bcm_id))
         return http_response(action_result, status.HTTP_404_NOT_FOUND)
+
+
+@router.websocket(
+    '/pins/{bcm_id}/watch/{edges}',
+    name='Pin updates',
+)
+async def websocket_pin_watch_route(websocket: WebSocket, bcm_id: str, edges: PinEdges):
+
+    valid_pin_id = RaspberryPiPinIds.from_bcm_id(bcm_id)
+
+    if not valid_pin_id:
+        # TODO: Too late to return a HTTP code here?
+        # action_result = error_action_result(PinMessage.ERROR_NOT_FOUND__PIN_ID__.format(pin_id=bcm_id))
+        # return http_response(action_result, status.HTTP_404_NOT_FOUND)
+        raise Exception(PinMessage.ERROR_NOT_FOUND__PIN_ID__.format(pin_id=bcm_id))
+
+    # Wait for the websocket to finish connecting
+    await websocket.accept()
+
+    async for event in watch_pin(valid_pin_id, edges):
+        await websocket.send_json(jsonable_encoder(event._asdict()))
