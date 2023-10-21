@@ -28,12 +28,12 @@ def read_pin_configurations(pin_ids: List[RaspberryPiPinIds]) -> ActionResult[Pi
     .. note:: A read error on a single pin will cause an error result.
     """
 
-    pin_state_map: Dict[RaspberryPiPinIds, PinConfiguration] = {}
+    pin_state_map: Dict[str, PinConfiguration] = {}
 
     for pin_id in pin_ids:
         pin_state_action_result = read_pin_configuration(pin_id)
         if pin_state_action_result.success:
-            pin_state_map[pin_id] = pin_state_action_result.data
+            pin_state_map[pin_id.name] = pin_state_action_result.data
         else:
             return error_action_result(pin_state_action_result.error.message)
 
@@ -44,7 +44,7 @@ def read_pin_configuration(pin_id: RaspberryPiPinIds) -> ActionResult[PinConfigu
     """Returns the result of attempting to read the :class:`~endrpi.model.pin.PinConfiguration` of a given pin."""
 
     try:
-        gpiozero_pin = Device.pin_factory.pin(pin_id)
+        gpiozero_pin = Device.pin_factories[pin_id.chipnum].pin(pin_id.linenum)
     except PinUnsupported:
         return error_action_result(PinMessage.ERROR_UNSUPPORTED__PIN_ID__.format(pin_id=pin_id))
 
@@ -76,7 +76,7 @@ def update_pin_configuration(pin_id: RaspberryPiPinIds,
     """
 
     try:
-        gpiozero_pin = Device.pin_factory.pin(pin_id)
+        gpiozero_pin = Device.pin_factories[pin_id.chipnum].pin(pin_id.linenum)
     except PinUnsupported:
         return error_action_result(PinMessage.ERROR_UNSUPPORTED__PIN_ID__.format(pin_id=pin_id))
 

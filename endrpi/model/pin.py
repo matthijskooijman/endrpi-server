@@ -13,38 +13,34 @@
 #  limitations under the License.
 
 from enum import Enum
-from typing import Union, Dict, Optional
+from typing import Union, Dict, NamedTuple, Optional
 
 from pydantic import BaseModel
 
+class PinDescTuple(NamedTuple):
+    chipnum: int
+    linenum: int
 
-class RaspberryPiPinIds(str, Enum):
-    """Enumerations for pin ids on the Raspberry Pi."""
-    GPIO2 = 'GPIO2'
-    GPIO3 = 'GPIO3'
-    GPIO4 = 'GPIO4'
-    GPIO14 = 'GPIO14'
-    GPIO15 = 'GPIO15'
-    GPIO17 = 'GPIO17'
-    GPIO18 = 'GPIO18'
-    GPIO27 = 'GPIO27'
-    GPIO22 = 'GPIO22'
-    GPIO23 = 'GPIO23'
-    GPIO24 = 'GPIO24'
-    GPIO10 = 'GPIO10'
-    GPIO9 = 'GPIO9'
-    GPIO25 = 'GPIO25'
-    GPIO11 = 'GPIO11'
-    GPIO7 = 'GPIO7'
-    GPIO5 = 'GPIO5'
-    GPIO6 = 'GPIO6'
-    GPIO12 = 'GPIO12'
-    GPIO13 = 'GPIO13'
-    GPIO19 = 'GPIO19'
-    GPIO16 = 'GPIO16'
-    GPIO26 = 'GPIO26'
-    GPIO20 = 'GPIO20'
-    GPIO21 = 'GPIO21'
+class RaspberryPiPinIds(PinDescTuple, Enum):
+    """Enumerations for pin ids on the Orange Pi 5."""
+    GPIO1_B7 = PinDescTuple(1, 1 * 8 + 7)
+    GPIO1_B6 = PinDescTuple(1, 1 * 8 + 6)
+    GPIO1_C6 = PinDescTuple(1, 2 * 8 + 6)
+    GPIO4_A3 = PinDescTuple(4, 0 * 8 + 3)
+    GPIO4_A4 = PinDescTuple(4, 0 * 8 + 4)
+    GPIO4_B2 = PinDescTuple(4, 1 * 8 + 2)
+    GPIO0_D5 = PinDescTuple(0, 3 * 8 + 5)
+    GPIO4_B3 = PinDescTuple(4, 1 * 8 + 3)
+    GPIO0_D4 = PinDescTuple(0, 3 * 8 + 4)
+    GPIO1_D3 = PinDescTuple(1, 3 * 8 + 3)
+    GPIO1_D2 = PinDescTuple(1, 3 * 8 + 2)
+    GPIO1_C1 = PinDescTuple(1, 2 * 8 + 1)
+    GPIO1_C0 = PinDescTuple(1, 2 * 8 + 0)
+    GPIO1_C2 = PinDescTuple(1, 2 * 8 + 2)
+    GPIO1_C4 = PinDescTuple(1, 2 * 8 + 4)
+    GPIO1_A3 = PinDescTuple(1, 0 * 8 + 3)
+    GPIO0_B6 = PinDescTuple(0, 1 * 8 + 6)
+    GPIO0_B5 = PinDescTuple(0, 1 * 8 + 5)
 
     @classmethod
     def from_bcm_id(cls, pin_id: str) -> Union['RaspberryPiPinIds', None]:
