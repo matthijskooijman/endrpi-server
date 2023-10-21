@@ -2,6 +2,7 @@
 fastapi==0.68.1
 uvicorn==0.15.0
 pydantic==1.8.2
+websockets=12.0
 
 # Starlette optional dependencies
 aiofiles==0.7.0
