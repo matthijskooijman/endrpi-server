@@ -36,7 +36,7 @@ def main():
     parser.add_argument('-h', '--host',
                         dest='host',
                         type=str,
-                        default='0.0.0.0',
+                        default='',
                         help='set the host to start the server on')
     args = parser.parse_args()
 
