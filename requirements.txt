@@ -16,3 +16,7 @@ loguru==0.5.3
 # Testing dependencies
 coverage==5.5
 requests==2.26.0
+
+# Addressable leds
+bitstring==4.1.2
+spidev==3.5
