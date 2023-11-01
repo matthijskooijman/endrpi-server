@@ -18,10 +18,10 @@ from fastapi import APIRouter, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.websockets import WebSocket
 
-from endrpi.actions.pin import read_pin_configurations, read_pin_configuration, update_pin_configuration, watch_pin
+from endrpi.actions.pin import check_pin_driven, read_pin_configurations, read_pin_configuration, update_pin_configuration, watch_pin
 from endrpi.model.action_result import ActionResult, error_action_result
 from endrpi.model.message import MessageData, PinMessage
-from endrpi.model.pin import PinConfiguration, PinEdges, RaspberryPiPinIds, PinIo
+from endrpi.model.pin import PinConfiguration, PinDrivenState, PinEdges, RaspberryPiPinIds, PinIo
 from endrpi.utils.api import http_response
 
 # Router that is exported to the server
@@ -106,6 +106,34 @@ async def put_pin_state_param_route(bcm_id: str, pin_configuration: PinConfigura
 
         action_result = update_pin_configuration(valid_pin_id, pin_configuration)
         return http_response(action_result)
+    else:
+        action_result = error_action_result(PinMessage.ERROR_NOT_FOUND__PIN_ID__.format(pin_id=bcm_id))
+        return http_response(action_result, status.HTTP_404_NOT_FOUND)
+
+
+@router.put(
+    '/pins/{bcm_id}/check_driven',
+    name='Pin connected status.',
+    description='Checks if something external is driving this pin by momentarily switching between pullup/pulldown.',
+    responses={
+        status.HTTP_200_OK: {
+            'model': PinDrivenState,
+        },
+        status.HTTP_404_NOT_FOUND: {
+            'model': MessageData,
+            'description': PinMessage.ERROR_NOT_FOUND__PIN_ID__,
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            'model': MessageData,
+            'description': 'An error occurred',
+        }
+    }
+)
+async def check_pin_driven_route(bcm_id: str):
+    valid_pin_id = RaspberryPiPinIds.from_bcm_id(bcm_id)
+    if valid_pin_id:
+        pin_action_result = await check_pin_driven(valid_pin_id)
+        return http_response(pin_action_result)
     else:
         action_result = error_action_result(PinMessage.ERROR_NOT_FOUND__PIN_ID__.format(pin_id=bcm_id))
         return http_response(action_result, status.HTTP_404_NOT_FOUND)

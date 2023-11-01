@@ -13,6 +13,7 @@
 #  limitations under the License.
 
 import asyncio
+import time
 from typing import Dict, Iterator, List, NamedTuple
 
 from gpiozero import Device, PinUnsupported
@@ -20,7 +21,7 @@ from pydantic import ValidationError
 
 from endrpi.model.action_result import ActionResult, error_action_result, success_action_result
 from endrpi.model.message import MessageData, PinMessage
-from endrpi.model.pin import PinConfiguration, PinEdges, RaspberryPiPinIds, PinIo, PinPull, PinConfigurationMap
+from endrpi.model.pin import PinConfiguration, PinDrivenState, PinEdges, RaspberryPiPinIds, PinIo, PinPull, PinConfigurationMap
 
 
 class PinEvent(NamedTuple):
@@ -101,6 +102,51 @@ def update_pin_configuration(pin_id: RaspberryPiPinIds,
 
     message_data = MessageData(message=PinMessage.SUCCESS_UPDATED__PIN_ID__.format(pin_id=pin_id))
     return success_action_result(message_data)
+
+
+async def check_pin_driven(pin_id: RaspberryPiPinIds) -> ActionResult[PinDrivenState]:
+    """Checks whether a pin is externally driven."""
+
+    try:
+        gpiozero_pin = Device.pin_factories[pin_id.chipnum].pin(pin_id.linenum)
+    except PinUnsupported:
+        return error_action_result(PinMessage.ERROR_UNSUPPORTED__PIN_ID__.format(pin_id=pin_id))
+
+    old_pull = gpiozero_pin.pull
+
+    driven = False
+
+    try:
+        # Try a couple of times, to rule out the possibility that the pin is driven
+        # but the driver switches exactly when we switch the pull resistor.
+        for pull, expected_state in [('up', True), ('down', False)] * 3:
+            gpiozero_pin.pull = pull
+            # Wait a very short while for the pin to change value. Required time
+            # depends on the pull resistor and parasitic capacitance, but if we
+            # grossly overestimate those, we get an RC time of 1nF * 100kΩ = 100us,
+            # and we need two or three RC-times to stabilize, so just stay above
+            # that and we should be safe.
+            #
+            # TODO: This actually blocks the asyncio thread, which is not ideal, but
+            # we cannot yield back to asyncio here, then it might serve another
+            # task that also tries to control this pin. It would be cleaner to use
+            # per-pin locking, but just briefly blocking is easier for now.
+            #time.sleep(0.01)
+            await asyncio.sleep(0.01)
+
+            # If the pin does not change along with the pull resistor, it must be driven, so stop trying
+            print(pull, expected_state, gpiozero_pin.state)
+            if gpiozero_pin.state != expected_state:
+                driven = True
+                break
+    finally:
+        gpiozero_pin.pull = old_pull
+
+    try:
+        pin_driven_status = PinDrivenState(driven=driven)
+        return success_action_result(pin_driven_status)
+    except ValidationError:
+        return error_action_result(PinMessage.ERROR_VALIDATION)
 
 
 async def watch_pin(pin_id: RaspberryPiPinIds, edges: PinEdges) -> Iterator[PinEvent]:
