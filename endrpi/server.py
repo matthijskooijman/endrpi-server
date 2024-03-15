@@ -25,6 +25,7 @@ from fastapi.requests import Request
 from fastapi.responses import FileResponse, Response
 
 from endrpi.model.message import MessageData
+from endrpi.routes.cmd import router as cmd_router
 from endrpi.routes.led import router as led_router
 from endrpi.routes.pin import router as pin_router
 from endrpi.routes.system import router as system_router
@@ -42,6 +43,7 @@ app.include_router(websocket_router)
 app.include_router(system_router, tags=['system'])
 app.include_router(pin_router, tags=['pins'])
 app.include_router(led_router, tags=['led'])
+app.include_router(cmd_router, tags=['cmd'])
 
 public_path = os.path.join(Path(__file__).parent, '_public')
 app.mount('/public', StaticFiles(directory=public_path, html=True, check_dir=True), name='public')
