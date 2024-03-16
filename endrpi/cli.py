@@ -38,6 +38,12 @@ def main():
                         type=str,
                         default='',
                         help='set the host to start the server on')
+    parser.add_argument('--allowed-command',
+                        dest='allowed_commands',
+                        default=[],
+                        type=str,
+                        action='append',
+                        help='allow remote execution of this executable (without path, can be specified multiple times)')
     args = parser.parse_args()
 
     # Initialize the custom log format and set both the endrpi logger and uvicorn logger to use it
@@ -46,6 +52,9 @@ def main():
 
     # Initialize the raspberry pi pin factory if possible, otherwise initialize a mock factory
     configure_pin_factory()
+
+    from endrpi.routes import cmd as cmd_route
+    cmd_route.cmd_whitelist = args.allowed_commands
 
     try:
         # Run the endrpi server programmatically (see: https://www.uvicorn.org/deployment)

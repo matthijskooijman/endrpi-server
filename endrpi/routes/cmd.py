@@ -22,11 +22,8 @@ from endrpi.model.message import MessageData
 from endrpi.model.cmd import CmdState
 from endrpi.utils.api import http_response
 
-cmd_whitelist = [
-    "nmcli",
-    "pactl",
-    "pacmd",
-]
+# Will be overwritten by main function
+cmd_whitelist = []
 
 # Router that is exported to the server
 router = APIRouter()
