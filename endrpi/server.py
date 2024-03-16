@@ -23,6 +23,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.requests import Request
 from fastapi.responses import FileResponse, Response
+from fastapi.middleware.cors import CORSMiddleware
 
 from endrpi.model.message import MessageData
 from endrpi.routes.cmd import router as cmd_router
@@ -48,6 +49,14 @@ app.include_router(cmd_router, tags=['cmd'])
 public_path = os.path.join(Path(__file__).parent, '_public')
 app.mount('/public', StaticFiles(directory=public_path, html=True, check_dir=True), name='public')
 
+def set_allowed_origins(origins):
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 @app.get("/docs", include_in_schema=False)
 async def get_docs():

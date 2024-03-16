@@ -22,7 +22,7 @@ sys.path.append(os.path.abspath('.'))
 
 from endrpi.config.logging import configure_logger, get_logging_configuration, get_logger
 from endrpi.config.pin_factory import configure_pin_factory
-from endrpi.server import app
+from endrpi.server import app, set_allowed_origins
 
 
 def main():
@@ -44,6 +44,12 @@ def main():
                         type=str,
                         action='append',
                         help='allow remote execution of this executable (without path, can be specified multiple times)')
+    parser.add_argument('--allowed-origin',
+                        dest='allowed_origins',
+                        default=[],
+                        type=str,
+                        action='append',
+                        help='origin to return in Access-Control-Allow-Origin header (can be specified multiple times))')
     args = parser.parse_args()
 
     # Initialize the custom log format and set both the endrpi logger and uvicorn logger to use it
@@ -55,6 +61,9 @@ def main():
 
     from endrpi.routes import cmd as cmd_route
     cmd_route.cmd_whitelist = args.allowed_commands
+
+    if args.allowed_origins:
+        set_allowed_origins(args.allowed_origins)
 
     try:
         # Run the endrpi server programmatically (see: https://www.uvicorn.org/deployment)
