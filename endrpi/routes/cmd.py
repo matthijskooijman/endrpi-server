@@ -57,5 +57,5 @@ async def put_exec_cmd(arg: CmdState):
         action_result = error_action_result("Command not allowed. Allowed commands: {}".format(", ".join(cmd_whitelist)))
         return http_response(action_result, status.HTTP_403_FORBIDDEN)
 
-    action_result = exec_cmd(arg.cmd)
+    action_result = await exec_cmd(arg.cmd)
     return http_response(action_result)

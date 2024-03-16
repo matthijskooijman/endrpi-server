@@ -13,18 +13,25 @@
 #  limitations under the License.
 
 from typing import List
-import subprocess
+import asyncio
 
 from endrpi.config.logging import get_logger
 from endrpi.model.action_result import ActionResult, error_action_result, success_action_result
 from endrpi.model.message import MessageData
 
-def exec_cmd(cmd: List[str]) -> ActionResult[bytes]:
+async def exec_cmd(cmd: List[str]) -> ActionResult[bytes]:
     try:
-        output = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout
-        return success_action_result(output)
-    except subprocess.CalledProcessError as e:
-        return error_action_result(f"Command failed with code {e.returncode}. Command output:\n{e.output.decode()}")
+        proc = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.STDOUT
+        )
+        stdout, stderr = await proc.communicate()
+
+        if proc.returncode:
+            return error_action_result(f"Command failed with code {proc.returncode}. Command output:\n{stdout.decode()}")
+
+        return success_action_result(stdout)
     except OSError as e:
         return error_action_result(f"Command failed to execute: {e}")
 
