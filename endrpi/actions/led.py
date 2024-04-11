@@ -37,17 +37,7 @@ def write_leds(bus: int, dev: int, state: LedState) -> ActionResult[MessageData]
             spi.mode = 3
             spi.max_speed_hz = int(bits_per_period * target_freq)
 
-            # Start with a low period to ensure the first transition is low-to-high
-            output = BitArray('0b00000000')
-            # Add a reset period before starting, to get a clean start on SPI
-            # controllers that let MOSI idle high instead of low. On those
-            # controllers, this causes a short blink (the leds latch in zero
-            # values before receiving the actual values), but without this, it
-            # seems the leds input state machine gets confused and you get
-            # seemingly random (but reproducible) output.
-
-            output += Bits(length=int(reset_period * target_freq * bits_per_period * 1.1))
-
+            output = BitArray()
             for byte in buffer:
                 # print(byte)
                 for bit in Bits(uint=byte, length=8):
