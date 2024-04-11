@@ -24,9 +24,20 @@ from endrpi.model.led import LedState
 from .pixelbuf import PixelBuf
 
 
-target_freq = 800000
-reset_period = 50e-6
-bits_per_period = 3
+if False:
+    # WS2812B
+    # Period is 1/800khz = 1250us, one bit is 416us
+    target_freq = 800000
+    reset_period = 50e-6
+    bit_patterns = ('0b100', '0b110')
+    bits_per_period = 3
+else:
+    # WS2815
+    # Period is 1/800khz = 1250us, one bit is 312us
+    target_freq = 800000
+    reset_period = 280e-6
+    bit_patterns = ('0b1000', '0b1110')
+    bits_per_period = 4
 
 
 def write_leds(bus: int, dev: int, state: LedState) -> ActionResult[MessageData]:
@@ -41,12 +52,8 @@ def write_leds(bus: int, dev: int, state: LedState) -> ActionResult[MessageData]
             for byte in buffer:
                 # print(byte)
                 for bit in Bits(uint=byte, length=8):
-                    assert bits_per_period == 3
                     # print(bit)
-                    if bit:
-                        output += '0b110'
-                    else:
-                        output += '0b100'
+                    output += bit_patterns[int(bit)]
 
             # Reset period to terminate transmission
             output += Bits(length=int(reset_period * target_freq * bits_per_period * 1.1))
