@@ -37,15 +37,6 @@ def write_leds(bus: int, dev: int, state: LedState) -> ActionResult[MessageData]
             spi.mode = 3
             spi.max_speed_hz = int(bits_per_period * target_freq)
 
-            try:
-                spi.no_cs = True
-            except OSError as e:
-                import errno
-                if e.errno == errno.EINVAL:
-                    get_logger().warn(f'SPI_NO_CS not supported, continuing without setting it')
-                else:
-                    raise
-
             # Start with a low period to ensure the first transition is low-to-high
             output = BitArray('0b00000000')
             # Add a reset period before starting, to get a clean start on SPI
