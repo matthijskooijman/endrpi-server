@@ -26,6 +26,7 @@ from fastapi.responses import FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from endrpi.model.message import MessageData
+from endrpi.routes.files import router as files_router
 from endrpi.routes.cmd import router as cmd_router
 from endrpi.routes.led import router as led_router
 from endrpi.routes.pin import router as pin_router
@@ -45,6 +46,7 @@ app.include_router(system_router, tags=['system'])
 app.include_router(pin_router, tags=['pins'])
 app.include_router(led_router, tags=['led'])
 app.include_router(cmd_router, tags=['cmd'])
+app.include_router(files_router, tags=['files'])
 
 public_path = os.path.join(Path(__file__).parent, '_public')
 app.mount('/public', StaticFiles(directory=public_path, html=True, check_dir=True), name='public')
