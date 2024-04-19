@@ -75,6 +75,10 @@ class PinMessage(str, Enum):
     ERROR_NOT_FOUND__PIN_ID__ = 'Pin with BCM pin number `{pin_id}` not found'
     SUCCESS_UPDATED__PIN_ID__ = 'Pin configuration for pin `{pin_id}` was updated successfully'
 
+class FilesMessage(str, Enum):
+    ERROR_VALIDATION = 'Failed to validate file name'
+    ERROR_NOT_FOUND__FILE__ = 'File with the name `{file_name}` not found'
+    SUCCESS_UPDATED__FILE__ = 'File with name `{file_name}` was updated successfully'
 
 class MessageData(BaseModel):
     """
