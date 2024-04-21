@@ -31,6 +31,7 @@ if False:
     reset_period = 50e-6
     bit_patterns = ('0b100', '0b110')
     bits_per_period = 3
+    byteorder = "BGR"
 else:
     # WS2815
     # Period is 1/800khz = 1250us, one bit is 312us
@@ -38,6 +39,7 @@ else:
     reset_period = 280e-6
     bit_patterns = ('0b1000', '0b1110')
     bits_per_period = 4
+    byteorder = "RGB"
 
 
 def write_leds(bus: int, dev: int, state: LedState) -> ActionResult[MessageData]:
@@ -63,7 +65,6 @@ def write_leds(bus: int, dev: int, state: LedState) -> ActionResult[MessageData]
             spi.xfer(output.tobytes())
             spi.close()
 
-    byteorder = "BGR"
     brightness = state.brightness
     buf = SpiPixelBuf(len(state.values), byteorder=byteorder, brightness=brightness)
     for idx, pixel in enumerate(state.values):
