@@ -32,6 +32,14 @@ if False:
     bit_patterns = ('0b100', '0b110')
     bits_per_period = 3
     byteorder = "BGR"
+elif False:
+    # WS2811 (high speed)
+    # Period is 1/800khz = 1250us, one bit is 312us
+    target_freq = 800000
+    reset_period = 280e-6
+    bit_patterns = ('0b1000', '0b1100')
+    bits_per_period = 4
+    byteorder = "RGB"
 else:
     # WS2815
     # Period is 1/800khz = 1250us, one bit is 312us
