@@ -1,7 +1,7 @@
 # FastAPI libraries
 fastapi==0.68.1
 uvicorn==0.15.0
-pydantic==1.8.2
+pydantic==1.10.19
 websockets=12.0
 
 # Starlette optional dependencies
