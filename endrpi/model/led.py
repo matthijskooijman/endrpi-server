@@ -12,9 +12,16 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+from enum import Enum
 from typing import List, Union
 
 from pydantic import BaseModel, Field
+
+
+class Protocol(Enum):
+    WS2812B = "WS2812B"
+    WS2811 = "WS2811"
+    WS2815 = "WS2815"
 
 
 class LedState(BaseModel):
@@ -26,3 +33,5 @@ class LedState(BaseModel):
         [16711680, 16711680, 255],
     ])
     brightness: float = Field(default = 1.0)
+    protocol: Protocol = Field(default = Protocol.WS2815)
+    byteorder: str | None = Field(default = None)

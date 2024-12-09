@@ -19,38 +19,38 @@ import spidev
 from endrpi.config.logging import get_logger
 from endrpi.model.action_result import ActionResult, success_action_result
 from endrpi.model.message import MessageData
-from endrpi.model.led import LedState
+from endrpi.model.led import LedState, Protocol
 
 from .pixelbuf import PixelBuf
 
 
-if False:
-    # WS2812B
-    # Period is 1/800khz = 1250us, one bit is 416us
-    target_freq = 800000
-    reset_period = 50e-6
-    bit_patterns = ('0b100', '0b110')
-    bits_per_period = 3
-    byteorder = "BGR"
-elif False:
-    # WS2811 (high speed)
-    # Period is 1/800khz = 1250us, one bit is 312us
-    target_freq = 800000
-    reset_period = 280e-6
-    bit_patterns = ('0b1000', '0b1100')
-    bits_per_period = 4
-    byteorder = "RGB"
-else:
-    # WS2815
-    # Period is 1/800khz = 1250us, one bit is 312us
-    target_freq = 800000
-    reset_period = 280e-6
-    bit_patterns = ('0b1000', '0b1110')
-    bits_per_period = 4
-    byteorder = "RGB"
-
-
 def write_leds(bus: int, dev: int, state: LedState) -> ActionResult[MessageData]:
+    if state.protocol == Protocol.WS2812B:
+        # Period is 1/800khz = 1250us, one bit is 416us
+        target_freq = 800000
+        reset_period = 50e-6
+        bit_patterns = ('0b100', '0b110')
+        bits_per_period = 3
+        byteorder = state.byteorder or "BGR"
+    elif state.protocol == Protocol.WS2811:
+        # High speed version (800khz)
+        # Period is 1/800khz = 1250us, one bit is 312us
+        target_freq = 800000
+        reset_period = 280e-6
+        bit_patterns = ('0b1000', '0b1100')
+        bits_per_period = 4
+        byteorder = state.byteorder or "RGB"
+    elif state.protocol == Protocol.WS2815:
+        # WS2815
+        # Period is 1/800khz = 1250us, one bit is 312us
+        target_freq = 800000
+        reset_period = 280e-6
+        bit_patterns = ('0b1000', '0b1110')
+        bits_per_period = 4
+        byteorder = state.byteorder or "RGB"
+    else:
+        raise Exception("Unknown protocol")
+
     class SpiPixelBuf(PixelBuf):
         def _transmit(self, buffer):
             spi = spidev.SpiDev()
