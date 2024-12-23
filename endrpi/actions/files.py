@@ -33,6 +33,8 @@ async def write_file(directory: str, file_name: str, data: dict) -> ActionResult
     try:
         with open(directory + file_name, 'w') as file:
             json.dump(data, file, indent=4)
+            file.flush()
+            os.fsync(file.fileno())
         return success_action_result(FilesMessage.SUCCESS_UPDATED__FILE__.format(file_name=file_name))
     except Exception as e:
         return error_action_result(str(e))
